@@ -1,0 +1,1 @@
+# API\nOpenAPI is available from FastAPI at `/docs`. V2 endpoints are versioned under `/api/v1/`.\n

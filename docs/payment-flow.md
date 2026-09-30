@@ -1,0 +1,1 @@
+# Payment flow\nIdentity → quote → payment record → routing → settlement. Unsupported live routes remain explicitly testnet.\n

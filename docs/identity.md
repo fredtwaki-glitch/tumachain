@@ -1,0 +1,1 @@
+# Identity\nTumaChain identities support email, username and optional phone resolution. Wallet details are not exposed by default.\n

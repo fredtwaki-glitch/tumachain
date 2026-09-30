@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: tumachain
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: ENVIRONMENT
+        value: testnet
+      - key: DEBUG
+        value: "false"
+      - key: DEV_AUTO_CREATE_ADMIN
+        value: "false"
+      - key: BLOCKCHAIN_MODE
+        value: arc_testnet
+      - key: DATABASE_URL
+        value: sqlite:///./pay_via_mail.db
+      - key: CORS_ORIGINS
+        value: '["https://tumachain.onrender.com"]'

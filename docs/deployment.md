@@ -1,0 +1,1 @@
+# Deployment\nRender uses `render.yaml`, installs `backend/requirements.txt`, and starts FastAPI with Uvicorn. Set production secrets through Render environment variables.\n

@@ -1,0 +1,10 @@
+TumaChain Arc Testnet wallet connection fix
+
+Problem:
+The original frontend used window.ethereum directly. When multiple browser wallet extensions are installed, window.ethereum can resolve to a different wallet (such as Trust Wallet) depending on injection order.
+
+Fix:
+The Arc wallet connector now uses EIP-6963 wallet discovery and explicitly selects MetaMask when it is available, with a compatibility fallback for injected providers. This lets MetaMask and Trust Wallet coexist without the button silently selecting Trust Wallet.
+
+Changed file:
+frontend/index.html

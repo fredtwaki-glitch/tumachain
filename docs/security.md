@@ -1,0 +1,1 @@
+# Security\nJWT authentication, ownership checks, rate limiting, API-key hashing, audit logs and explicit testnet labeling are retained/extended.\n

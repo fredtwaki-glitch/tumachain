@@ -1,0 +1,18 @@
+
+
+ TumaChain Phase 3 - Test Fix
+================================
+
+Fixed:
+- backend/tests/test_app.py
+  - Updated the old root endpoint test.
+  - Phase 3 intentionally serves frontend/index.html from GET /.
+  - The test now verifies HTML content and the ARC_TESTNET_UI_MARKER.
+  - /health remains the JSON health endpoint.
+
+No application route was changed because the Phase 3 README documents GET / as the UI entry point.
+
+Validation:
+- Python syntax validation passed for all backend test files.
+- Full pytest could not be executed in this environment because dependencies are not installed here and external package download is unavailable.
+- Run the project setup script on your Windows machine, then run: python -m pytest -q

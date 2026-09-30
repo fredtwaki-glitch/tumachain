@@ -1,0 +1,1 @@
+# Settlement\nSettlementProvider adapters are represented by the testnet quote layer. Real bank/mobile-money execution requires a configured provider and compliance readiness.\n
