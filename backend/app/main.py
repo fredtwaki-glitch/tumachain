@@ -32,16 +32,9 @@ from app.services.wallet_service import ensure_missing_wallets_for_user
 from app.services.schema_upgrade import ensure_v2_schema
 from app.models.user import User
 
-Base.metadata.create_all(bind=engine)
-ensure_v2_schema()
+import logging
 
-# Development convenience only: create the default local admin account
-# after the schema exists. This is gated to APP_ENV=development.
-with SessionLocal() as _seed_db:
-    ensure_development_admin(_seed_db)
-    # Backfill only newly introduced testnet wallet records for existing users.
-    for _user in _seed_db.query(User).all():
-        ensure_missing_wallets_for_user(_seed_db, _user)
+logger = logging.getLogger("tumachain")
 
 app = FastAPI(
     title=settings.app_name,
@@ -82,6 +75,47 @@ app.include_router(merchant.router)
 app.include_router(payment_quotes.router)
 app.include_router(payment_v1.router)
 app.include_router(webhooks.router)
+
+
+@app.on_event("startup")
+def bootstrap_schema_and_seed_data() -> None:
+    """Create any brand-new tables, patch legacy SQLite databases, and seed
+    dev-only data — run as a startup event (not at import time) so a
+    transient DB issue surfaces as a clear, logged failure instead of
+    crashing the process before FastAPI even finishes constructing `app`.
+
+    NOTE: `ensure_v2_schema()` is dialect-aware (SQLite and Postgres) and
+    idempotent, so it's safe to run on every boot. `alembic upgrade head`
+    (run as part of the start command) remains the preferred path for new
+    tables/future migrations, but is allowed to fail there — e.g. against
+    a Postgres database Alembic has never tracked, with no shell/console
+    access available to stamp it first (as on Render's free tier). This
+    function is the fallback that keeps the service usable regardless.
+    """
+    try:
+        Base.metadata.create_all(bind=engine)
+        ensure_v2_schema()
+    except Exception:
+        # Never let a schema-patch failure take the whole service down —
+        # especially on tiers with no shell access to diagnose/retry it
+        # interactively. Log loudly so it's visible, but keep serving.
+        logger.exception(
+            "Schema bootstrap failed. Columns some endpoints rely on may "
+            "still be missing; check logs/DB directly when you can."
+        )
+
+    if settings.app_env != "development":
+        return
+
+    try:
+        with SessionLocal() as seed_db:
+            ensure_development_admin(seed_db)
+            for seed_user in seed_db.query(User).all():
+                ensure_missing_wallets_for_user(seed_db, seed_user)
+    except Exception:
+        # Dev-only convenience: never let seeding failures take the whole
+        # app down, since real requests don't depend on it.
+        logger.exception("Development data seeding failed; continuing without it.")
 
 
 _FRONTEND = Path(__file__).resolve().parents[2] / "frontend"

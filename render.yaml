@@ -3,7 +3,12 @@ services:
     name: tumachain
     env: python
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
+    # alembic upgrade head is attempted but allowed to fail (e.g. on a
+    # database Alembic has never tracked, with no shell access available
+    # to stamp it first on the free tier). app.main's startup event calls
+    # the dialect-aware ensure_v2_schema() as a self-healing fallback, so
+    # a failed/partial migration here doesn't take the whole service down.
+    startCommand: cd backend && (alembic upgrade head || echo "alembic upgrade skipped; relying on self-healing schema bootstrap") && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: APP_ENV
@@ -16,6 +21,9 @@ services:
         value: "false"
       - key: BLOCKCHAIN_MODE
         value: arc_testnet
+      # NOTE: if a Postgres instance is attached (or DATABASE_URL is set
+      # directly in the Render dashboard), that value overrides this one.
+      # Do not rely on this sqlite default to reflect what's actually live.
       - key: DATABASE_URL
         value: sqlite:///./pay_via_mail.db
       - key: CORS_ORIGINS
